@@ -1,0 +1,15 @@
+extends layout
+
+block content
+
+  div(class='main')
+    p
+    div(id='submitinfobox')
+      h3 회원님의 아이디는 #{myid}입니다.
+      h3 이메일로 받은 인증번호를 입력하세요
+      p
+      form(action='/fid/auth', method='post')
+        input(id='writezone', type='text', name='authnumber', placeholder='인증번호 입력')
+        p
+        input(id='submitbutton', type='submit', value='전송', style='border-radius: 10px;')
+      p

@@ -1,0 +1,11 @@
+extends layout
+
+block content
+  div(class='main')
+    h1 Main page
+    img(id='mainimage', src='/images/mainimage.jpg')
+    p Welcome to StockPredict!
+
+    -if (loginnonauth)
+        a(href='/emailauth', id='atag') 이메일 인증
+        h 이 필요합니다!

@@ -1,0 +1,78 @@
+doctype html
+html
+  head
+    title= title
+    script(src='/javascripts/popup.js')
+    script(src='/javascripts/redirect.js')
+    script(src='/javascripts/function.js')
+    script(type='text/javascript' src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.js')
+    link(rel='stylesheet', href='/stylesheets/style.css')
+  body
+    div(class='banner')
+      div(id='leftbanner') 
+        a(href='/') StockPredict
+      div(id='centerbanner')
+        a(href='/stockinfo/list') &nbsp;&nbsp;증권 목록&nbsp;&nbsp;
+        a(href='/users/focus') &nbsp;&nbsp;내 관심종목&nbsp;&nbsp;
+        a(href='/users/predict') &nbsp;&nbsp;나의 예측&nbsp;&nbsp;
+      -if (loginid)
+        div(id='loginedid') Logined with 
+          div(style='color:yellow; display: inline;') #{loginid}
+        form(action='/logout', method='post')
+          input(type='submit', value='logout', id='rightbanner')
+      -else if (loginnonauth)
+        div(id='loginedid') Non Auth Email : 
+          div(style='color:yellow; display: inline;') #{loginnonauth}
+        form(action='/logout', method='post')
+          input(type='submit', value='logout', id='rightbanner')    
+      -else
+        input(type='button', value='login', id='rightbanner' onclick='turnonlog();')
+    -if (loginid == undefined)
+      div(id='login')
+        h3 로그인
+          input(id='xbutton', type='button', value='x', onclick='turnoffall();')
+        p
+        form(action='/login', method='post')
+          input(id='writezone', type='text', name='id', placeholder='아이디')
+          p
+          input(id='writezone', type='password', name='password', placeholder='비밀번호')
+          p
+          input(type='submit', value='로그인', style='border-radius: 10px; cursor: pointer;')
+          p
+          a(id='linkcolor', onclick='turnonsign();') 회원가입&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          a(id='linkcolor', onclick='turnonfindidpw();') ID/PW 찾기
+          p
+
+      div(id='signup')
+        h3 회원가입
+          input(id='xbutton', type='button', value='x', onclick='turnoffall();')
+        p
+        form(action='/signup', method='post')
+          p 아이디
+          input(id='writezone', type='text', name='id', placeholder='아이디' required)
+          p 비밀번호
+          input(id='writezone', type='password', name='password', placeholder='비밀번호' required)
+          p 비밀번호 다시 입력
+          input(id='writezone', type='password', name='password2', placeholder='비밀번호 한번 더' required)
+          p 이메일
+          input(id='writezone', type='email', name='address', placeholder='이메일 주소' required)
+          p
+          input(type='submit', value='회원가입', style='border-radius: 10px; cursor: pointer;')
+          p
+
+      div(id='findidpw') 
+        h3 ID/PW 찾기   
+          input(id='xbutton', type='button', value='x', onclick='turnoffall();')
+        p
+        form(action='/fid', method='post')
+          input(id='writezone', type='email', name='address', placeholder='이메일 주소')
+          p
+          input(type='submit', value='ID/PW 찾기', style='border-radius: 10px; cursor: pointer;')
+          p
+
+
+    -if(intype)
+      div(id='alertbox')=intype
+
+    block content
+

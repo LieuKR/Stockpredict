@@ -1,0 +1,43 @@
+extends layout
+
+block content
+  div(class='main')
+    h2 내 예측 페이지
+    table
+      tr
+        td &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        td Name&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        td date&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        td dayprice&nbsp;&nbsp;&nbsp;&nbsp;
+        td expectprice&nbsp;&nbsp;&nbsp;&nbsp;
+        td nextprice&nbsp;&nbsp;&nbsp;&nbsp;
+        td 오차율(%)
+        -for (let i = (page - 1) * 20; i < page * 20 && i < list.length;  i++) // 내 예측에서 빼버리는 버튼
+          tr
+            td
+              form(action='/users/mypredout', method='post', onsubmit="return confirm('정말 삭제하시겠습니까?')")
+                input(type='hidden', name='id', value=`${list[i].id}`)
+                button(type='submit', style='font-size:5px; padding:5px 5px')
+            td
+              a(href=`/stockinfo/${list[i].code}`, style='color:black')=list[i].name
+            td=list[i].date
+            td=list[i].dayprice
+            td=list[i].expectprice
+            -if (list[i].nextprice == undefined)
+              td -
+            -else
+              td=list[i].nextprice
+            -if (list[i].nextprice == undefined)
+              td -
+            -else
+              td
+                script.
+                  errorrate(#{list[i].nextprice}, #{list[i].expectprice})
+
+    table(style='margin-left: auto; margin-right: auto;')
+      -for (let i = Math.max(page - 4 , 1); i < parseInt((list.length-1)/20)+2 && i < Math.max(page - 5 , 1) + 10; i++)
+        td &nbsp;&nbsp;
+          -if(page == i)  
+            a(href=`/users/predict/${i}`, id='pagebutton', , style='color:red; text-decoration: underline;') #{i}
+          -else
+            a(href=`/users/predict/${i}`, id='pagebutton') #{i}

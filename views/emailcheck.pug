@@ -1,0 +1,15 @@
+extends layout
+
+block content
+
+  div(class='main') 
+    p
+    div(id='submitinfobox')
+      h3 #{loginnonauth}로 인증 키를 전송하였습니다!
+      h3 메일로 받은 키를 입력하세요
+      p
+      form(action='/emailauth/check', method='post')
+        input(id='writezone', type='text', name='authnumber', placeholder='인증번호 입력')
+        p
+        input(id='submitbutton', type='submit', value='전송', style='border-radius: 10px;')
+      p

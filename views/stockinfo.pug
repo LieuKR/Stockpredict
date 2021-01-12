@@ -1,0 +1,55 @@
+extends layout
+
+block content
+  div(class='main')
+    h2=info[0].name
+    div(id='datediv') #{stockdata[0].date}
+    canvas(id='mychart', width='500', height='300' style="float:left")
+    div(class='chartright')
+      p
+      h1=stockdata[0].endprice
+      h3(style='display: inline;') &nbsp;&nbsp;전일비
+      div(style='display: inline;')
+        -if(stockdata[0].endprice-stockdata[1].endprice > 0)
+          h3(style='color:red; display: inline;') &nbsp;&nbsp;+#{stockdata[0].endprice-stockdata[1].endprice}&nbsp;
+        -else
+          h3(style='color:blue; display: inline;') &nbsp;&nbsp;#{stockdata[0].endprice-stockdata[1].endprice}&nbsp;
+      -if(stockdata[0].endprice > stockdata[1].endprice)
+        div(style='display: inline; color:red; font-weight: bold;')
+          script.
+            changerate(#{stockdata[0].endprice}, #{stockdata[1].endprice})
+      -else
+        div(style='display: inline; color:blue; font-weight: bold;')
+          script.
+            changerate(#{stockdata[0].endprice}, #{stockdata[1].endprice})
+      h5
+        table
+          tr
+            td Date&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            td Price
+            -for (let i = 1; i < 8; i++)
+              tr
+                td=stockdata[i].date
+                td=stockdata[i].endprice
+
+    div(id='addmypredict')
+      form(action='../users/mypred', method='post') 내일 예상가 :&nbsp;
+        input(type='number', name='expectprice', required, placeholder=`${stockdata[0].endprice}`, min=stockdata[0].endprice*0.7, max=stockdata[0].endprice*1.3)
+        input(type='hidden', name='code', value=`${info[0].code}`)
+        input(type='hidden', name='name', value=`${info[0].name}`)
+        input(type='hidden', name='dayprice', value=`${stockdata[0].endprice}`)
+        input(type='hidden', name='date', value=`${stockdata[0].date}`)
+        button(type='submit', style='font-size:5px; padding:8px 8px; vertical-align:middle;')
+
+    div(id='addfocusbutton')
+      form(action='../users/mylist', method='post') 관심종목 추가 :&nbsp;
+        input(type='hidden', name='code', value=`${info[0].code}`)
+        input(type='hidden', name='name', value=`${info[0].name}`)
+        input(type='hidden', name='info', value=`${info[0].info}`)
+        button(type='submit', style='font-size:5px; padding:5px 5px; vertical-align:middle; ')
+
+    script.
+        let stockdata = !{JSON.stringify(stockdata)};
+        
+    script(src='/javascripts/chart.js').
+    

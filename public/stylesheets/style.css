@@ -1,0 +1,318 @@
+body {
+  margin: 0;
+  font: 15px "Lucida Grande", Helvetica, Arial, sans-serif;
+  color: rgb(0, 0, 0);
+  background-color: rgba(207, 207, 207, 0.959);
+}
+
+a {
+  color: white;
+  text-decoration:none;
+}
+
+a:hover{
+  color: yellow;
+}
+
+#linkcolor{
+  color: rgba(0, 126, 230, 0.959);
+  cursor: pointer;
+}
+
+
+.banner {
+  height: 75px;
+  padding: 0;
+  margin: 0;
+  color: white;
+  background-color: black;
+  font-weight: bold;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.chartright{
+  background-color: rgb(215, 255, 242);
+  width:200px; 
+  height:275px;
+  border-top: solid;
+  border-bottom: solid;
+  float:left;
+  margin-left: 50px;
+  padding: 20px;
+  padding-top: 5px;
+}
+
+#centerbanner{
+  color: white;
+  font-size: 20px;
+  position: absolute;
+  left: 300px;
+}
+#rightbanner{
+  display: block;
+  border-radius: 20px;
+  width: 55px;
+  height: 35px;
+  background-color: #fff;
+  color: black;
+  right: 11px;
+  top: 11px;
+  position: absolute;
+  text-align: center;
+  cursor:pointer;
+  font: 13px "Lucida Grande", Helvetica, Arial, sans-serif;
+}
+
+#leftbanner{
+  color: white;
+  font-size: 35px;
+  margin-left: 30px;
+}
+
+#loginedid{
+    color: rgb(255, 255, 255);
+    font-size: 15px;
+    right: 10px;
+    top: 50px;
+    position: absolute;
+}
+
+.main{
+  left:50%; transform:translateX(-50%);
+  position: absolute;
+  width:800px;
+  color: black;
+  background-color: white;
+  margin-top: 0px;
+  padding: 40px;
+  padding-top: 10px;
+  min-height: 400px;
+}
+
+#login {
+  display: block;
+  position: absolute; /* 뭐가잇던간에 신경끄고 무조건 자리 잡도록 */
+  left:50%; transform:translateX(-50%);  /* 위치를 화면 가운데(좌우) 정해주는 옵션 */
+  top:20%;
+
+  visibility: hidden; /* 기본세팅 : 안보이게 */
+
+  border-radius: 30px;
+  box-shadow: 0 2px 4px rgba(0,0,0,.2);
+
+  width: 100%;
+  max-width: 400px;
+  height: auto;
+  max-height: 100vh;
+  z-index: 1;
+  overflow-y: auto;
+  background-color: #fff;
+
+  text-align: center;
+}
+
+#signup {
+  display: block;
+  position: absolute; /* 뭐가잇던간에 신경끄고 무조건 자리 잡도록 */
+  left:50%; transform:translateX(-50%);  /* 위치를 화면 가운데로 박아주는 옵션 */
+  top:15%;
+  visibility: hidden; /* 기본세팅 : 안보이게 */
+
+  border-radius: 30px;
+  box-shadow: 0 2px 4px rgba(0,0,0,.2);
+
+  width: 100%;
+  max-width: 400px;
+  height: auto;
+  max-height: 100vh;
+  z-index: 1;
+  overflow-y: auto;
+  background-color: #fff;
+
+  text-align: center;
+}
+
+#findidpw {
+  display: block;
+  position: absolute; /* 뭐가잇던간에 신경끄고 무조건 자리 잡도록 */
+  left:50%; transform:translateX(-50%);  /* 위치를 화면 가운데로 박아주는 옵션 */
+  top:20%;
+  visibility: hidden; /* 기본세팅 : 안보이게 */
+
+  border-radius: 30px;
+  box-shadow: 0 2px 4px rgba(0,0,0,.2);
+
+  width: 100%;
+  max-width: 400px;
+  height: auto;
+  max-height: 100vh;
+  z-index: 1;
+  overflow-y: auto;
+  background-color: #fff;
+
+  text-align: center;
+}
+
+#xbutton {
+  border-radius: 30px; 
+  left:90%; 
+  position: absolute;
+  cursor : pointer;
+}
+
+#writezone {
+  width: 70%;  /* 원하는 너비 설정 */ 
+  height: auto;  /* 높이값 초기화 */
+  line-height : normal;  /* line-height 초기화 */
+  padding: .8em .5em; /* 원하는 여백 설정, 상하단 여백으로 높이를 조절 */
+  border: 1px solid #999;
+  border-radius: 15px;  /* iSO 둥근모서리 */
+  outline-style: none;  /* 포커스시 발생하는 효과 제거를 원한다면 */
+  -moz-appearance: none;
+  appearance: none;
+}
+
+#predictbutton{
+  position: absolute;
+  right : 40px;
+  top : 350px;
+}
+
+#addfocusbutton{
+  font-size: 13px;
+  font-weight: bold;
+  position: absolute;
+  right : 40px;
+  top : 20px;
+}
+
+#addmypredict{
+  position:absolute; 
+  text-align: center;
+  right : 40px;
+  top : 40px;
+  font-size: 13px;
+  font-weight: bold;
+}
+
+#datediv{
+  position: absolute;
+  right : 53px;
+  top : 385px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+#changetypebutton{
+  cursor: pointer;
+  left : 50px;
+  bottom : 40px;
+  position: absolute;
+  font-size: 11px;
+  font-weight: bold;
+  z-index: 1;
+}
+
+#pagebutton{
+  color:black;
+  border:black;
+  background-color:transparent;
+  font-size: 13px;
+  font-weight: bold;
+  width: 100%;
+}
+
+#pagebutton:hover{
+  color: blue;
+  cursor: pointer;
+}
+
+#alertbox {
+  display: block;
+  position: absolute;
+  right:40px;
+  top:40px;
+  font-size: 16px;
+  font-weight: bold;
+  pointer-events: none; /* 상호작용 안되게 */
+  animation: fadeout 5s;
+  animation-fill-mode: forwards;
+  border-radius: 30px;
+  box-shadow: 0 2px 4px rgba(0,0,0,.2);
+  width: 100%;
+  max-width: 400px;
+  margin:auto;
+  height: 70px;
+  max-height: 100vh;
+  line-height: 70px;
+  overflow-y: auto;
+  background-color: rgb(255, 252, 226);
+  text-align: center;
+  z-index: 2;
+}
+
+@keyframes fadeout { /* for fadeout */
+  from {
+      opacity:1;
+  }
+  to {
+      opacity:0;
+  }
+}
+
+#submitbutton{
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: bold;
+}
+
+#submitinfobox {
+  display: block;
+  position: absolute; /* 뭐가잇던간에 신경끄고 무조건 자리 잡도록 */
+  left:50%; transform:translateX(-50%);  /* 위치를 화면 가운데(좌우) 정해주는 옵션 */
+  top:20%;
+  border-radius: 30px;
+  box-shadow: 0 2px 4px rgba(0,0,0,.2);
+  width: 100%;
+  max-width: 400px;
+  height: auto;
+  max-height: 100vh;
+  z-index: 1;
+  overflow-y: auto;
+  background-color: #fff;
+  text-align: center;
+  position: relative;
+}
+
+#atag {
+  color: black;
+  text-decoration:none;
+  font-weight: bold;
+}
+
+#atag:hover{
+  color: red;
+}
+
+@media(max-width:830px){
+  .main{
+    left:0px; transform: none;
+    width:100%;
+  }
+  #centerbanner{
+    position: absolute;
+    left:40px;
+  }
+  #leftbanner{
+    visibility: hidden;
+  }
+}
+
+#mainimage{
+  width: auto; 
+  height: auto; 
+  max-width: 700px; 
+  max-height: 700px;
+}

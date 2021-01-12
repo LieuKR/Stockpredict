@@ -1,0 +1,16 @@
+extends layout
+
+block content
+
+  div(class='main')   
+    p
+    div(id='submitinfobox')
+      h3 원하는 새 비밀번호를 작성하세요
+      p
+      form(action='/fid/npw', method='post')
+        input(id='writezone', type='text', name='authnumber1', placeholder='새 비밀번호')
+        p
+        input(id='writezone', type='text', name='authnumber2', placeholder='같은 비밀번호')
+        p
+        input(id='submitbutton', type='submit', value='전송', style='border-radius: 10px;')
+      p

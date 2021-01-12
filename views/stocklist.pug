@@ -1,0 +1,47 @@
+extends layout
+
+block content
+  div(class='main')
+    h2 증권 목록 (#{type})
+    form(action='/stockinfo/list', method='post')
+      input(type='submit', id='changetypebutton' value=untype)
+      input(type='hidden', name='type', value=untype)
+      input(type='hidden', name='untype', value=type)
+    p
+    table
+      tr
+        td &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        td Name&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        td Code&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        td Info
+        -for (let i = (page - 1) * 20; i < page * 20 && i < list.length;  i++)
+          tr
+            td
+              form(action='/users/mylistfromlist', method='post', onsubmit="return confirm('관심종목에 추가하시겠습니까?')")
+                input(type='hidden', name='code', value=`${list[i].code}`)
+                input(type='hidden', name='name', value=`${list[i].name}`)
+                input(type='hidden', name='info', value=`${list[i].info}`)
+                input(type='hidden', name='page', value=page)
+                input(type='hidden', name='type', value=type)
+                input(type='hidden', name='untype', value=untype)
+                button(type='submit', style='font-size:5px; padding:5px 5px')
+            td
+              a(href=`/stockinfo/${list[i].code}`, style='color:black')=list[i].name
+            td=list[i].code
+            td=list[i].info
+    table(style='margin-left: auto; margin-right: auto;')
+      -for (let i = Math.max(page - 4 , 1); i < parseInt(list.length/20)+2 && i < Math.max(page - 5 , 1) + 10; i++)
+        td
+          form(action='/stockinfo/list', method='post')
+            -if(page == i)
+              input(type='submit', id='pagebutton', style='color:red; text-decoration: underline;', value=i)
+            -else
+              input(type='submit', id='pagebutton', value=i)
+            input(type='hidden', name='type', value=type)
+            input(type='hidden', name='untype', value=untype)
+            input(type='hidden', name='page', value=i)
+    div(style='position:relative; text-align: center; z-index: 0;')
+      form(action='/stockinfo/search', method='get')
+        input(type='text', minlength='1', required, name='keyword', placeholder='종목명 검색')
+        input(type='hidden', name='type', value=`${type}`)
+        button(type='submit', style='padding:8px 8px; cursor: pointer; vertical-align:middle;')

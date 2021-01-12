@@ -1,0 +1,28 @@
+extends layout
+
+block content
+  div(class='main')
+    h2 검색 결과 (#{type}, #{list.length}건)
+    table
+      tr
+        td &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        td Name
+        td Code
+        td Info
+        -for (let i = 0; i < list.length; i++)
+          tr
+            td
+              form(action='/users/mylist', method='post', onsubmit="return confirm('관심종목에 추가하시겠습니까?')")
+                input(type='hidden', name='code', value=`${list[i].code}`)
+                input(type='hidden', name='name', value=`${list[i].name}`)
+                input(type='hidden', name='info', value=`${list[i].info}`)
+                button(type='submit', style='font-size:5px; padding:5px 5px')
+            td
+              a(href=`/stockinfo/${list[i].code}`, style='color:black')=list[i].name
+            td=list[i].code
+            td=list[i].info
+    div(style='position:relative; text-align: center;')
+      form(action='/stockinfo/search', method='get')
+        input(type='text', minlength='1', required, name='keyword', placeholder=`${keyword}`)
+        input(type='hidden', name='type', value=`${type}`)
+        button(type='submit', style='padding:8px 8px; vertical-align:middle;')
