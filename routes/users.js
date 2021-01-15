@@ -150,7 +150,7 @@ router.get('/predict', function(req, res) {
                   });
               })
             }
-            res.cookie('predicted',req.session.loginid,{maxAge: 1000 * 60 * 0.1, path:`/users/predict`}); // 쿠키 유효기간은 0.1분 (6sec)
+            res.cookie('predicted',req.session.loginid,{maxAge: 1000 * 60 * 1, path:`/users/predict`}); // 쿠키 유효기간은 1분 (60sec)
             res.redirect('/users/predict')
         })
       }
