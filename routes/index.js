@@ -5,31 +5,35 @@ const crypto = require('crypto');
 const async = require('async');
 const nodemailer = require('nodemailer');
 
-const connection = mysql.createConnection({
-  host: 'localhost',
-  port: 3306,
-  user: 'root',
-  password: '229478',
-  database: 'stockpredict'
+const dbconfig = require('../config/dbsetting.json');
+const pwconfig = require('../config/pwsetting.json');
+const mailconfig = require('../config/mailsetting.json');
+
+const connection1 = mysql.createConnection({
+  host: dbconfig.host,
+  port: dbconfig.port,
+  user: dbconfig.user,
+  password: dbconfig.password,
+  database: dbconfig.database1
 });
 
 const connection2 = mysql.createConnection({
-  host: 'localhost',
-  port: 3306,
-  user: 'root',
-  password: '229478',
-  database: 'stockdata'
+  host: dbconfig.host,
+  port: dbconfig.port,
+  user: dbconfig.user,
+  password: dbconfig.password,
+  database: dbconfig.database2
 });
 
 const connection3 = mysql.createConnection({
-  host: 'localhost',
-  port: 3306,
-  user: 'root',
-  password: '229478',
-  database: 'userinfo'
+  host: dbconfig.host,
+  port: dbconfig.port,
+  user: dbconfig.user,
+  password: dbconfig.password,
+  database: dbconfig.database3
 });
 
-connection.connect();
+connection1.connect();
 connection2.connect(); // connection2 : stockdata
 connection3.connect(); // conn3 : userinfo
 
@@ -66,7 +70,7 @@ router.post('/signup', function(req, res, next) {
   // 2. 이메일 중복여부 체크
   // 3. password = password2
 
-  connection.query(`SELECT EXISTS (SELECT \`id\` FROM \`users\` WHERE \`id\`='${req.body.id}') as success`,
+  connection1.query(`SELECT EXISTS (SELECT \`id\` FROM \`users\` WHERE \`id\`='${req.body.id}') as success`,
     (err, rows1) => {
       if(rows1[0].success == 1){
         makeintype(res, '중복되는 ID가 존재합니다');
@@ -76,7 +80,7 @@ router.post('/signup', function(req, res, next) {
         res.redirect('/')
       }
       else {
-        connection.query(`SELECT EXISTS (SELECT \`email\` FROM \`users\` WHERE \`email\` = '${req.body.address}') as success`,
+        connection1.query(`SELECT EXISTS (SELECT \`email\` FROM \`users\` WHERE \`email\` = '${req.body.address}') as success`,
         (err, rows2) => {
           if(rows2[0].success == 1){
             makeintype(res, '이미 존재하는 이메일 주소입니다');
@@ -93,7 +97,8 @@ router.post('/signup', function(req, res, next) {
               res.redirect('/')
             } else { // 모든 제한을 통과하면 작동하는 회원가입 시퀀스
               const cryptpasswordfunc = (callback) => {
-                crypto.pbkdf2(req.body.password, 'mysalt', 98731, 64, 'sha512', (err, derivedKey) => { // crypto 모듈을 이용한 일방향 암호화. 복호화가 불가능
+                crypto.pbkdf2(req.body.password, pwconfig.salt, pwconfig.runnum, pwconfig.byte, 
+                  pwconfig.method, (err, derivedKey) => { // crypto 모듈을 이용한 일방향 암호화. 복호화가 불가능
                   if (err) {
                     console.log('암호화 과정 에러');
                     callback(err);
@@ -102,7 +107,7 @@ router.post('/signup', function(req, res, next) {
                   });
                 };
               const savepassword = (arg1, arg2, arg3, callback) => {
-                connection.query(`INSERT INTO users (id, password, email, auth) VALUES ('${arg1}', '${arg2}', '${arg3}', '0');`
+                connection1.query(`INSERT INTO users (id, password, email, auth) VALUES ('${arg1}', '${arg2}', '${arg3}', '0');`
                   , (err, rows, fields) => {
                   if (err) {
                     console.log('sql에 저장이 안되는 오류 발생');
@@ -159,7 +164,8 @@ router.post('/signup', function(req, res, next) {
 router.post('/login', function(req, res, next) {
   // req.body.id : 입력받아 온 id값, req.body.password : 입력받아온 평문 암호, 암호화 필요함
   const cryptpasswordfunc = (callback) => {
-    crypto.pbkdf2(req.body.password, 'mysalt', 98731, 64, 'sha512', (err, derivedKey) => {
+    crypto.pbkdf2(req.body.password, pwconfig.salt, pwconfig.runnum, pwconfig.byte, 
+      pwconfig.method, (err, derivedKey) => {
       if (err) {
         console.log('암호화 과정 에러');
         callback(err);
@@ -168,7 +174,7 @@ router.post('/login', function(req, res, next) {
       });
    };
   const checkidpw = (arg1, arg2, callback) => {
-    connection.query(`SELECT * FROM users WHERE id='${arg1}' and password='${arg2}';`
+    connection1.query(`SELECT * FROM users WHERE id='${arg1}' and password='${arg2}';`
       , (err, rows, fields) => {
       if (rows[0] == null) {
         makeintype(res, '아이디, 비밀번호가 잘못되었습니다')
@@ -218,8 +224,8 @@ router.get('/emailauth', function(req, res, next) {
         host: 'smtp.gmail.com',
         secure: true,
         auth: {
-          user: 'stockpredict17',
-          pass: 'testpassword17'
+          user: mailconfig.user,
+          pass: mailconfig.pass
         },
       });
       let mailoption = {
@@ -262,7 +268,7 @@ router.get('/emailauth', function(req, res, next) {
 // 위에서 만든 키가 입력되었는지 체크하고, 맞으면 auth값을 바꿔주고 아니면 전페이지로 보내버리기
 router.post('/emailauth/check', function(req, res, next){
   if(req.session.foremailauth == req.body.authnumber){
-    connection.query(`UPDATE users SET auth = '1' WHERE (email = '${req.session.email}');`
+    connection1.query(`UPDATE users SET auth = '1' WHERE (email = '${req.session.email}');`
     , (err, rows, fields) => {
     if (err) {
       console.log('sql에 저장이 안되는 오류 발생');
@@ -282,7 +288,7 @@ router.post('/emailauth/check', function(req, res, next){
 
 // 아이디 찾아주는 페이지, req.body.address : 입력받아온 이메일값
 router.post('/fid', function(req, res, next){
-  connection.query(`SELECT * FROM users WHERE email='${req.body.address}';`
+  connection1.query(`SELECT * FROM users WHERE email='${req.body.address}';`
   , (err, rows, fields) => {
   if (rows[0] == null) {
     makeintype(res, '가입되지 않은 이메일 주소입니다!')
@@ -303,8 +309,8 @@ router.get('/fid/cpw', function(req, res){
       host: 'smtp.gmail.com',
       secure: true,
       auth: {
-        user: 'stockpredict17',
-        pass: 'testpassword17'
+        user: mailconfig.user,
+        pass: mailconfig.pass
       },
     });
     let mailoption = {
@@ -361,7 +367,8 @@ router.get('/fid/auth', function(req, res, next){
 router.post('/fid/npw', function(req, res, next){
   if(req.body.authnumber1 == req.body.authnumber2){ // 같은 비밀번호가 잘 입력되었을 때
     const cryptpasswordfunc = (callback) => {
-      crypto.pbkdf2(req.body.authnumber1, 'mysalt', 98731, 64, 'sha512', (err, derivedKey) => {
+      crypto.pbkdf2(req.body.authnumber1, pwconfig.salt, pwconfig.runnum, pwconfig.byte, 
+        pwconfig.method, (err, derivedKey) => {
         if (err) {
           console.log('암호화 과정 에러');
           callback(err);
@@ -370,7 +377,7 @@ router.post('/fid/npw', function(req, res, next){
         });
      };
     const changepw = (arg1, callback) => {
-      connection.query(`UPDATE users SET password = '${arg1}' WHERE (email = '${req.session.emailforpass}');`
+      connection1.query(`UPDATE users SET password = '${arg1}' WHERE (email = '${req.session.emailforpass}');`
         , (err, rows, fields) => {
           if (err) {
             console.log('sql에 저장이 안되는 오류 발생');

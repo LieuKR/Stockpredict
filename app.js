@@ -6,6 +6,7 @@ var logger = require('morgan');
 const session = require('express-session');
 const MySQLStore = require('express-mysql-session');
 
+const dbconfig  = require('./config/dbsetting.json');
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
@@ -25,11 +26,11 @@ app.use(session({
   key: 'mykey',
   secret: 'mysecret',
   store: new MySQLStore({
-    host: 'localhost',
-    port: 3306,
-    user: 'root',
-    password: '229478',
-    database: 'stockpredict',
+    host: dbconfig.host,
+    port: dbconfig.port,
+    user: dbconfig.user,
+    password: dbconfig.password,
+    database: dbconfig.database1,
     clearExpired: true, // 만료된 세션을 자동으로 확인하고 DB에서 삭제
     checkExpirationInterval : 1000 * 100 // 100초마다 세션 확인 
   }),

@@ -6,12 +6,14 @@ const charset = require('charset'); // 헤더에 있는 charset 값을 알수있
 const cheerio = require('cheerio'); // html 데이터로부터 원하는 값을 파싱하기 위한 모듈
 const mysql = require('mysql');
 
+const dbconfig  = require('../config/dbsetting.json');
+
 const connection2 = mysql.createConnection({
-  host: 'localhost',
-  port: 3306,
-  user: 'root',
-  password: '229478',
-  database: 'stockdata'
+  host: dbconfig.host,
+  port: dbconfig.port,
+  user: dbconfig.user,
+  password: dbconfig.password,
+  database: dbconfig.database2
 });
 
 connection2.connect();

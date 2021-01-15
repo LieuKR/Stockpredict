@@ -7,28 +7,30 @@ const cheerio = require('cheerio'); // html 데이터로부터 원하는 값을 
 const iconv = require('iconv-lite'); // for charset change EUC-KR to UTF-8
 const request = require('request'); // for html crawling
 
+const dbconfig  = require('../config/dbsetting.json');
+
 const connection1 = mysql.createConnection({
-  host: 'localhost',
-  port: 3306,
-  user: 'root',
-  password: '229478',
-  database: 'stockpredict'
+  host: dbconfig.host,
+  port: dbconfig.port,
+  user: dbconfig.user,
+  password: dbconfig.password,
+  database: dbconfig.database1
 });
 
 const connection2 = mysql.createConnection({
-  host: 'localhost',
-  port: 3306,
-  user: 'root',
-  password: '229478',
-  database: 'stockdata'
+  host: dbconfig.host,
+  port: dbconfig.port,
+  user: dbconfig.user,
+  password: dbconfig.password,
+  database: dbconfig.database2
 });
 
 const connection3 = mysql.createConnection({
-  host: 'localhost',
-  port: 3306,
-  user: 'root',
-  password: '229478',
-  database: 'userinfo'
+  host: dbconfig.host,
+  port: dbconfig.port,
+  user: dbconfig.user,
+  password: dbconfig.password,
+  database: dbconfig.database3
 });
 
 connection1.connect(); // connection1 : stockpredict

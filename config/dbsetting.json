@@ -1,0 +1,9 @@
+{
+    "host": "localhost",
+    "port": 3306,
+    "user": "root",
+    "password": "229478",
+    "database1": "stockpredict",
+    "database2": "stockdata",
+    "database3": "userinfo"
+}
