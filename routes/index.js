@@ -34,14 +34,15 @@ const connection3 = mysql.createConnection({
 });
 
 connection1.connect();
-connection2.connect(); // connection2 : stockdata
-connection3.connect(); // conn3 : userinfo
+connection2.connect();
+connection3.connect();
 
+// 알람 함수. 쿠키 내용이 알람에 나옴
 function makeintype(res, cookieinfo) {
   res.cookie('intype', cookieinfo ,{maxAge: 1000 * 1});
-} // intype라는 쿠키에 어떤 내용을 담아 보내는 함수. 이 쿠키를 이용하여 알람을 나타내려 함.
+}
 
-/* 홈페이지. 로그인, 회원가입등의 기능을 요구 */
+// main page. 로그인, 인증되지 않은 이메일, 로그인되지 않았을 때
 router.get('/', function(req, res) {
   if(req.session.loginid){
     res.render('index', {loginid: req.session.loginid, intype: req.cookies.intype});
@@ -59,17 +60,15 @@ router.post('/logout', function(req, res) {
   });
 });
 
-// 회원가입 페이지. 데이터베이스에 평문 id, 평문 email address 암호화된 password, 그리고 이메일 인증여부를 넣어준다
-// ID에 제한이 필요. 6자리 숫자 or 'kosdaq', 'kospi'는 안됨.
+ // 회원가입 페이지
 router.post('/signup', function(req, res, next) {
-
-  // 입력받아온 post data의 유효성 검사를 먼저 하자.
-  // req.body.id, req.body.password, req.body.password2, req.body.address
-
-  // 1. id 중복여부 체크
-  // 2. 이메일 중복여부 체크
-  // 3. password = password2
-
+  /* post data 유효성 검사
+    1. 중복성 검사
+    2. id 형식 검사
+    3. 이메일 주소 중복 검사
+    4. 입력받은 비밀번호 같은지 검사
+    5. 비밀번호 형식 검사
+    6. 모두 통과시 회원가입 시작 */
   connection1.query(`SELECT EXISTS (SELECT \`id\` FROM \`users\` WHERE \`id\`='${req.body.id}') as success`,
     (err, rows1) => {
       if(rows1[0].success == 1){
@@ -95,10 +94,14 @@ router.post('/signup', function(req, res, next) {
             } else if (/^(?=.*[a-zA-Z])((?=.*\d)|(?=.*\W)).{8,20}$/.test(req.body.password) == false) {
               makeintype(res, '비밀번호는 숫자나, 특수문자를 포함해야 합니다.');
               res.redirect('/')
-            } else { // 모든 제한을 통과하면 작동하는 회원가입 시퀀스
+            } else {
+              /*모든 제한을 통과하면 작동하는 회원가입 과정
+                1. 비밀번호 암호화
+                2. db에 집어넣음
+              */
               const cryptpasswordfunc = (callback) => {
                 crypto.pbkdf2(req.body.password, pwconfig.salt, pwconfig.runnum, pwconfig.byte, 
-                  pwconfig.method, (err, derivedKey) => { // crypto 모듈을 이용한 일방향 암호화. 복호화가 불가능
+                  pwconfig.method, (err, derivedKey) => {
                   if (err) {
                     console.log('암호화 과정 에러');
                     callback(err);
@@ -125,7 +128,7 @@ router.post('/signup', function(req, res, next) {
               async.waterfall(tasks, function(err, result){
                 }
               );
-              //이 밑으로는 처음 회원가입때 유저정보를 담기 위한 테이블 생성 과정
+              // 이후 서비스 제공을 위한 db table 생성
               connection3.query(`CREATE TABLE \`${req.body.id}\` (\`id\` INT NOT NULL AUTO_INCREMENT,
                 \`code\` INT(6) UNSIGNED ZEROFILL NOT NULL, \`name\` VARCHAR(45),
                 \`info\` VARCHAR(45), PRIMARY KEY (\`id\`))`
@@ -134,7 +137,6 @@ router.post('/signup', function(req, res, next) {
                         throw err;
                       }
                     });
-              //요 아래쿼리문은 회원가입할때 유저 예측 정보를 위한 테이블 생성
               connection3.query(`CREATE TABLE \`${req.body.id}_pred\` (\`id\` INT NOT NULL AUTO_INCREMENT,
                 \`code\` INT(6) UNSIGNED ZEROFILL NOT NULL, \`name\` VARCHAR(45),
                 \`date\` DATE, \`dayprice\` INT, \`expectprice\` INT, \`nextprice\` INT,
@@ -153,16 +155,14 @@ router.post('/signup', function(req, res, next) {
     });
 });
 
-// login page : pw를 먼저 암호화 -> id,pw가 일치하는게 있는지 db와 매칭하고 여러 경우의 수를 채워준다.
-  // 1. 받아온 평문 암호 암호화부터.
-  // 2. 아이디, 암호화된 패스워드가 일치하는 것을 찾는 쿼리문 작성
-    // if 1) 일치하는게 없으면 아이디와 비밀번호가 일치하지 않습니다 << 알람 표시 후 처음 페이지로
-    // if 2) 둘다 일치하는게 있으면 그 no의 auth값 확인
-        // if 2-1) auth = 0 이면 이메일 인증이 안된거임. 이메일 인증 페이지로 슝
-        // if 2-2) auth = 1 이면 이메일 인증까지 댄거임. 로그인 쿠키를 내어주고, 처음 페이지로
-
+  /*login page
+    1. 비밀번호 암호화
+    2. id, pw와 일치하는지 db에서 찾기
+      2-1. 존재하지 않음
+      2-2. 존재하면 auth값 확인
+        2-2-1. auth = 0 => 이메일 인증
+        2-2-2. auth = 1 => 정상 로그인 */
 router.post('/login', function(req, res, next) {
-  // req.body.id : 입력받아 온 id값, req.body.password : 입력받아온 평문 암호, 암호화 필요함
   const cryptpasswordfunc = (callback) => {
     crypto.pbkdf2(req.body.password, pwconfig.salt, pwconfig.runnum, pwconfig.byte, 
       pwconfig.method, (err, derivedKey) => {
@@ -185,21 +185,19 @@ router.post('/login', function(req, res, next) {
       };
     });
   };
-// rows[0] 를 보내주자. rows[0].id , password, address, auth 를 사용할 수 있을거임.
-  const checkauth = (arg1, arg2, callback) => {  // arg1 : 0 or 1, 인증유무 확인 / arg2 : 로그인한 아이디
-    // arg1.table : 그 테이블의 값
+  const checkauth = (arg1, arg2, callback) => {
     if (arg1.auth === 1) { 
       let test = () => {
         makeintype(res, '로그인 되었습니다!')
         req.session.loginid = arg2;
-        res.redirect('back'); // 메인 페이지로 세션이 설정된 쿠키를 쥐여준뒤 보내줌
+        res.redirect('back');
       };
       test();
     } else {
       let test = () => {
         req.session.email = arg1.email;
         makeintype(res, '이메일 인증이 필요합니다!')
-        res.redirect('/emailauth'); // 이메일 인증 페이지로 보냄
+        res.redirect('/emailauth');
       };
       test();
     };
@@ -209,15 +207,16 @@ router.post('/login', function(req, res, next) {
     checkidpw,
     checkauth
   ];
-  async.waterfall(tasks, function(err, result){ // 비동기 처리를 위해 꼭 필요
+  async.waterfall(tasks, function(err, result){
     if (err) {console.log('로그인 ERROR')}
     }
   );
 });
 
-// 이메일 인증 페이지. 받아오는 post정보는 no, id, email address 세개
+// 이메일 인증. auth = 0 : 이메일 인증이 안 된 계정, auth = 1 : 이메일 인증이 된 계정
 router.get('/emailauth', function(req, res, next) {
   if(req.session.email){
+    // email로 인증키 전송
     function sendemail(toemail, title, txt){
       const transporter = nodemailer.createTransport({
         service: 'gmail',
@@ -241,20 +240,17 @@ router.get('/emailauth', function(req, res, next) {
         transporter.close()
         });
     };
-    randomkey = (callback) => { // 랜덤키 생성. 이걸 인증키로 사용할 예정
+    // 메일 인증 키 생성함수
+    randomkey = (callback) => { 
       let randomnumber = Math.floor(Math.random() * 10000000000 - 1);
       callback(randomnumber);
     };
     if (req.session.foremailauth){
       console.log('인증용 키가 이미 있습니다');
     } else {
-      // 인증키가 없으면 인증키를 만들고, 세션에 저장.
       randomkey(function(randomedkey){
-        // 전송된 키는 변수 randomedkey, 세션에 저장
-        // console.log('이메일 인증을 위해 생성된 키는 %d 입니다', randomedkey);  기능확인을 위해 넣었었음
         req.session.foremailauth = `${randomedkey}`;
         sendemail(req.session.email, '이메일 인증을 위한 stockpredict 인증번호', `${randomedkey}`);
-        // req.session.email 주소에 stockpredict 인증번호라는 제목으로, 생성된 랜덤키를 전송
       });
     };
     res.render('emailcheck', {loginid: req.session.loginid, intype: req.cookies.intype, loginnonauth: req.session.email});
@@ -264,8 +260,7 @@ router.get('/emailauth', function(req, res, next) {
   }
 });
 
-// 이메일 인증값 바꿔주는 페이지
-// 위에서 만든 키가 입력되었는지 체크하고, 맞으면 auth값을 바꿔주고 아니면 전페이지로 보내버리기
+// 입력받아온 키 확인후 세션에 저장된 값과 일치하면 auth값 수정
 router.post('/emailauth/check', function(req, res, next){
   if(req.session.foremailauth == req.body.authnumber){
     connection1.query(`UPDATE users SET auth = '1' WHERE (email = '${req.session.email}');`
@@ -274,7 +269,6 @@ router.post('/emailauth/check', function(req, res, next){
       console.log('sql에 저장이 안되는 오류 발생');
       }
     else {
-      // auth = 1로 바뀌며 모든 세션을 파괴
       req.session.destroy();
       makeintype(res, '이메일 인증이 성공하였습니다! ')
       res.redirect('/');
@@ -286,7 +280,7 @@ router.post('/emailauth/check', function(req, res, next){
   };
 });
 
-// 아이디 찾아주는 페이지, req.body.address : 입력받아온 이메일값
+// 아이디 찾아주는 페이지
 router.post('/fid', function(req, res, next){
   connection1.query(`SELECT * FROM users WHERE email='${req.body.address}';`
   , (err, rows, fields) => {
@@ -295,13 +289,13 @@ router.post('/fid', function(req, res, next){
     res.redirect('/');
     }
   else {
-    req.session.emailforpass = req.body.address; // 이메일 주소
-    req.session.idforcheakpass = rows[0].id; // 아이디
-    res.redirect('/fid/cpw'); // 이 페이지에서 이메일 인증을 요구하자
+    req.session.emailforpass = req.body.address;
+    req.session.idforcheakpass = rows[0].id;
+    res.redirect('/fid/cpw');
   };
 });
 
-// 비밀번호 바꿔주기 위한 이메일 인증 페이지
+// 비밀번호를 바꾸기 위한 이메일 인증 페이지
 router.get('/fid/cpw', function(req, res){
   function sendemail(toemail, title, txt){
     const transporter = nodemailer.createTransport({
@@ -334,7 +328,6 @@ router.get('/fid/cpw', function(req, res){
     res.render('cpw', {myid: req.session.idforcheakpass, loginid: req.session.loginid, intype: req.cookies.intype, loginnonauth: req.session.email});
   } else {
     randomkey(function(randomedkey){
-      // console.log('비밀번호 교체를 위해 전송될 키는 %d 입니다', randomedkey);  기능확인을 위해 넣었었음
       req.session.forpasschang = `${randomedkey}`;
       sendemail(req.session.emailforpass, '비밀번호 교체를 위한 stockpredict 인증번호', `${randomedkey}`);
     });
@@ -344,16 +337,17 @@ router.get('/fid/cpw', function(req, res){
 
 // 인증번호를 입력받았을 경우
 router.post('/fid/auth', function(req, res, next){
-  if(req.session.forpasschang == req.body.authnumber){ // 인증번호를 옳게 입력
+  // 인증번호를 맞게 입력한 경우
+  if(req.session.forpasschang == req.body.authnumber){
     req.session.enteredauthnumber = req.body.authnumber;
     res.render('npw', {loginid: req.session.loginid, intype: req.cookies.intype, loginnonauth: req.session.email});
-  } else { // 인증번호를 잘못 입력. 알람을 띄우고, 전페이지로
+  } else { 
     makeintype(res, '잘못된 인증번호입니다!')
     res.redirect('/fid/cpw');
   };
 });
 
-// 보안문제가 생길 수 있는 페이지. 그래서 세션을 사용하였다.
+// 인증번호가 잘못되었을때 들어오는 페이지. 다시 입력할 수 있게 함
 router.get('/fid/auth', function(req, res, next){
   if(req.session.enteredauthnumber){
     res.render('npw', {loginid: req.session.loginid, intype: req.cookies.intype, loginnonauth: req.session.email});
@@ -363,9 +357,10 @@ router.get('/fid/auth', function(req, res, next){
   };
 });
 
-// 새 비밀번호를 만들어 주는 페이지. 암호화 방식이 복호화가 불가능한 방식이므로, 무조건 새로 만들게 해야함
+// 새 비밀번호를 만들어 주는 페이지
 router.post('/fid/npw', function(req, res, next){
-  if(req.body.authnumber1 == req.body.authnumber2){ // 같은 비밀번호가 잘 입력되었을 때
+   // 같은 비밀번호가 입력되었을 때
+  if(req.body.authnumber1 == req.body.authnumber2){
     const cryptpasswordfunc = (callback) => {
       crypto.pbkdf2(req.body.authnumber1, pwconfig.salt, pwconfig.runnum, pwconfig.byte, 
         pwconfig.method, (err, derivedKey) => {
@@ -399,7 +394,8 @@ router.post('/fid/npw', function(req, res, next){
       else {console.log('비밀번호 변경 완료')}
       }
     );
-   } else { // 서로 다른 비밀번호가 입력되었을때. 전페이지 보내면서 알람
+   } else { 
+        // 서로 다른 비밀번호가 입력되었을때
       makeintype(res, '같은 비밀번호가 입력되지 않았습니다!')
       res.redirect('/fid/auth');
    }

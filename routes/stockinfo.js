@@ -1,9 +1,9 @@
 var express = require('express');
 var router = express.Router();
-const request = require('request'); // for html crawling
-const iconv = require('iconv-lite'); // for charset change EUC-KR to UTF-8
-const charset = require('charset'); // 헤더에 있는 charset 값을 알수있음
-const cheerio = require('cheerio'); // html 데이터로부터 원하는 값을 파싱하기 위한 모듈
+const request = require('request');
+const iconv = require('iconv-lite');
+const charset = require('charset');
+const cheerio = require('cheerio');
 const mysql = require('mysql');
 
 const dbconfig  = require('../config/dbsetting.json');
@@ -18,7 +18,7 @@ const connection2 = mysql.createConnection({
 
 connection2.connect();
 
-function dateform(array) { // date : 날짜값. Thu Nov 19 2020 00:00:00 GMT+0900 (GMT+09:00) 요론모양을 2020-10-12 이런모양으로 가공해주는 함수
+function dateform(array) {
   let year = array.date.getFullYear();
   let month = array.date.getMonth()+1;
   let day = array.date.getDate();
@@ -31,14 +31,14 @@ function dateform(array) { // date : 날짜값. Thu Nov 19 2020 00:00:00 GMT+090
   array.date = year+"-"+month+"-"+day;
 }
 
-// 주식목록 페이지. 주소 입력을 받아서 들어올 경우
+// 주식목록 페이지. get방식
 router.get('/list', function(req, res) {
   connection2.query(`SELECT \`name\`, \`code\`, \`info\` FROM \`KOSPI\` ORDER BY \`name\`;`, (err, rows) => {
     res.render('stocklist', {type: 'KOSPI', untype:'KOSDAQ', list: rows, page: 1, loginid: req.session.loginid, intype: req.cookies.intype, loginnonauth: req.session.email});
   })
 });
 
-// 주식목록 페이지로 post로 들어올 경우.
+// 주식목록 페이지. post방식
 router.post('/list', function(req, res) {
   connection2.query(`SELECT \`name\`, \`code\`, \`info\` FROM \`${req.body.type}\` ORDER BY \`name\`;`, (err, rows) => {
     if(req.body.page == undefined){
@@ -49,7 +49,7 @@ router.post('/list', function(req, res) {
   })
 });
 
-// 페이징 처리를 위한 파트
+// 페이징 처리 파트
 router.get('/list/:type', function(req, res) {
   connection2.query(`SELECT \`name\`, \`code\`, \`info\` FROM \`${req.params.type}\` ORDER BY \`name\`;`, (err, rows) => {
     res.render('stocklist', {type:req.params.type, untype:req.query.untype, list: rows, page:req.query.page, 
@@ -74,17 +74,23 @@ router.get('/search', function(req, res, next) {
 });
 
 
-// 종목 상세정보 페이지. 최근 며칠 주가, 그래프, 예측버튼, 관심종목 추가등이 필요하고,
-// 그 페이지로 들어갔을때 주가정보를 크롤링해와야 한다.
-// :code에 해당하는 값 : req.params.code에 들어간다. ex) /stockinfo/003942  => 003942 = req.params.code
+/* 종목 상세정보
+    1. 주가 데이터는 네이버 증권 페이지에서 크롤링.
+      1-1. 크롤링 데이터는 최소화
+      1-2. 쿠키를 이용, 같은 작업을 반복하지 않게 제한
+      1-3. 오늘 데이터만 따로 갱신하는 쿼리문 작성(금일 데이터의 최신화를 위해)
+    2. 
+*/
 router.get('/:code', function(req, res){
+    // code에 해당하는 table가 없으면 table생성
     connection2.query(`CREATE TABLE IF NOT EXISTS \`${req.params.code}\` (
     \`id\` MEDIUMINT NOT NULL AUTO_INCREMENT,
     \`date\` DATE NULL UNIQUE, \`endprice\` INT NULL, PRIMARY KEY (\`id\`));`
     , (err, rows) => {
       if(err) throw err;
-      }); // table가 없으면 만들어 준다.
+      }); 
 
+    // YYYY-MM-DD형식의 today값
     function maketoday() {
         let date = new Date();
         let year = date.getFullYear();
@@ -98,23 +104,26 @@ router.get('/:code', function(req, res){
           }
         return year+"-"+month+"-"+day;
       };
-    today = maketoday(); // today값 정해진 형식으로 가져옴
+    today = maketoday();
 
-    if(req.cookies.crawled !== req.params.code){ //크롤링한 쿠키가 남아있지 않을 때 작동하는 if문
+    // 쿠키를 이용, 작업 반복 안하도록
+    if(req.cookies.crawled !== req.params.code){
       function crawlpage() {
-        // 쿠키생성. 1분동안 이 작업을 반복 안하도록
-        res.cookie('crawled', `${req.params.code}` ,{maxAge: 1000 * 60 * 3, path:`/`}); // 쿠키의 유효기간은 1분
+        // 작업을 반복하지 않기 위한 쿠키 생성. 유효기간 2분
+        res.cookie('crawled', `${req.params.code}` ,{maxAge: 1000 * 60 * 2, path:`/`});
+        // 데이터 크롤링. 최신 50일치 데이터를 db에 넣어주는 과정
         return new Promise(resolve => {
           for (let i = 1; i < 5; i++){
             let url = `https://finance.naver.com/item/sise_day.nhn?code=${req.params.code}&page=${i}`;
             request({url, 
               headers: { 'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36' },
               encoding: null}, function(error, response, body){
-              let char = charset(res.headers, body); // iconv.decode(body, char) 가져온 데이터. 이 값을 파싱해서 원하는 데이터 형태로 가공해야 함.
+              let char = charset(res.headers, body);
               let $ = cheerio.load(`${iconv.decode(body, char)}`);
               let $dailyinfo = $('body > table.type2 > tbody > tr');
               $dailyinfo.each((i, item) => {
-                if($(item).find('td:nth-child(1) > span').text() !== ''){ // 날짜와 종가가 있는 부분만 거르는 망
+                // 날짜와 종가가 있는 부분만 사용
+                if($(item).find('td:nth-child(1) > span').text() !== ''){ 
                       connection2.query(`INSERT INTO \`${req.params.code}\` (\`date\`, \`endprice\`) 
                       SELECT '${$(item).find('td:nth-child(1) span').text()}', 
                         '${$(item).find('td:nth-child(2) span').text().replace(/,/g, '')}'
@@ -124,8 +133,8 @@ router.get('/:code', function(req, res){
                             if(err) throw err
                             });
                     };
-                  if(i == 1 && today == $(item).find('td:nth-child(1) span').text()) { //오늘 날짜만 없으면 넣고, 있으면 새값을 덮어씌움. 
-                    // if문 따로 뺀 이유는 효율성을 위해서.
+                  // 오늘 날짜만, 데이터가 없으면 insert, 존재하면 덮어씌움.
+                  if(i == 1 && today == $(item).find('td:nth-child(1) span').text()) {
                     connection2.query(`INSERT INTO \`${req.params.code}\` (\`date\`, \`endprice\`) VALUES
                       ('${$(item).find('td:nth-child(1) span').text()}', 
                       '${$(item).find('td:nth-child(2) span').text().replace(/,/g, '')}') ON DUPLICATE 
@@ -136,21 +145,22 @@ router.get('/:code', function(req, res){
               });
             });
           };
+           // 크롤링에 걸리는 시간제한
           setTimeout(() => {
             resolve('resolved');
-          }, 50); // 크롤링까지 걸리는 시간. 위 프로미스에 0.05초 제한을 준거랑 다를바 없음
+          }, 50);
         });
       };
       async function datacrawl() {
         let result = await crawlpage();
-        res.redirect(`/stockinfo/${req.params.code}`); // 위 작업을 다한 뒤 다시 이 페이지로.
+        res.redirect(`/stockinfo/${req.params.code}`);
       }
       datacrawl();
     } else {
-        // 쿠키가 존재할 경우 들여보냄. KOSPI일때, KOSDAQ일 경우를 나눴음.
-        // 위 if문이 다 돌고 난 뒤 이 부분으로 들어올 것이다
+      // 위 if문이 끝난 뒤 redirect되며 이하 내용이 출력됨
       connection2.query(`SELECT EXISTS (SELECT * FROM \`KOSPI\` WHERE \`code\`=${req.params.code}) as success;`, 
       (err, rows) => {
+        // 종목이 kospi일 경우
         if(rows[0].success == 1) {
           connection2.query(`SELECT \`name\`, \`code\`, \`info\` FROM \`KOSPI\` WHERE \`code\` = ${req.params.code};`, 
           (err, rows) => {
@@ -162,6 +172,7 @@ router.get('/:code', function(req, res){
               });
           });
         } else {
+          // 종목이 kosdaq일 경우
           connection2.query(`SELECT \`name\`, \`code\`, \`info\` FROM \`KOSDAQ\` WHERE \`code\` = ${req.params.code};`, 
           (err, rows) => {
             connection2.query(`SELECT * FROM \`${req.params.code}\` ORDER BY \`date\` DESC LIMIT 30`, 

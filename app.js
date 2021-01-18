@@ -14,9 +14,8 @@ var stockinfoRouter = require('./routes/stockinfo');
 
 var app = express();
 
-// view engine setup
 app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'pug'); // template engine : pug
+app.set('view engine', 'pug');
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -31,14 +30,14 @@ app.use(session({
     user: dbconfig.user,
     password: dbconfig.password,
     database: dbconfig.database1,
-    clearExpired: true, // 만료된 세션을 자동으로 확인하고 DB에서 삭제
-    checkExpirationInterval : 1000 * 100 // 100초마다 세션 확인 
+    clearExpired: true,
+    checkExpirationInterval : 1000 * 100
   }),
-  resave: false, // 요청이 바뀌지 않더라도 세션 정보를 다시 저장
-  saveUninitialized: false, // 쿠키를 설정하기 전 사용자의 허락이 필요 : false
+  resave: false,
+  saveUninitialized: false,
   cookie: {
-    maxAge: 1000 * 60 * 60, // 세션은 60초 * 10, 60분동안 유효함
-    secure: false // 기본값은 false. true일 경우 https에서만 쿠키 전송
+    maxAge: 1000 * 60 * 60, // 60sec
+    secure: false
   }
 }))
 
@@ -47,7 +46,7 @@ app.use('/users', usersRouter);
 app.use('/stockinfo', stockinfoRouter);
 var router = express.Router();
 
-/* GET users listing. */
+
 router.get('/', function(req, res, next) {
   if(req.session.loginid){
     res.end(`Logined with ID : ${req.session.loginid}`)
