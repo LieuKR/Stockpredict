@@ -17,3 +17,27 @@
 ## DB (MySQL)
 * DB는 다음과 같이 구성되었습니다.
   ![DB 구조](https://docs.google.com/drawings/d/e/2PACX-1vQj6qQQ2-hHuEZhzZcNuSNkUtEpclMv6Nc5kDlxaw_2oFm29SZiHyenf8u_0vWtB-ZDS1JE_WVVjnAL/pub?w=1440&h=1080)
+
+## 증권 리스트 페이지
+  - DB에서 가져온 정보를 이용하여 페이지를 구성합니다.
+  - KOSPI, KOSDAQ의 모든 종목을 보여줍니다.
+  - 나의 관심종목에 추가/제거할 수 있습니다.
+  - 종목 이름을 검색할 수 있습니다.
+  ![증권 목록 페이지](https://docs.google.com/drawings/d/e/2PACX-1vQ0KyQ3d4isKzmlwl3qCKEaGqZA49dXDARjwRBBB-W2Ll6v9U_OS0QPD4qDj7_MnIFSsNNWYR53xpKV/pub?w=1440&h=1080)
+  
+## 관심종목 페이지
+  - 개인별 관심종목 테이블에서 가져온 정보를 이용하여 페이지를 구성합니다.
+  - 관심종목을 제거할 수 있습니다.
+  
+## 나의 예측 페이지
+  - 개인별 예측정보 테이블에서 가져온 정보를 이용하여 페이지를 구성합니다.
+  - 예측한 종목정보, 예측 날짜, 예측당시 가격, 예측한 가격, 다음날의 가격 등의 정보를 제공합니다.
+  - 다음 가격(nextprice)값이 비어있을 경우 해당 종목의 DB를 갱신하고 nextprice값을 갱신합니다.
+  ![나의 예측 페이지](https://docs.google.com/drawings/d/e/2PACX-1vSKJXdBAxJQKmCgF0XUO775BIHqs0taToFuWxhcTiwzX9FQ_X9Pn7pKInXDTm8muKxEyD638yQVG_hh/pub?w=1440&h=1080)
+
+## 종목 정보 페이지
+  - 단일 종목에 대한 정보를 제공합니다.
+  - 관심종목 추가/제거, 다음 가격 예측이 가능합니다.
+  - 종목정보는 네이버 증권 페이지에서 최근 50일의 가격을 가져옵니다.
+  - 제공되는 차트는 chart.js 미들웨어를 통해 최근 30일 가격추이를 보여줍니다.
+  ![종목 정보 페이지](https://docs.google.com/drawings/d/e/2PACX-1vTgOFs84UID1w66y_dM3zlXD68hg-1uzUG6GVykI9k22y6VC5JYdLGERdnbwTkHlj46IUGjuIHolmwk/pub?w=1440&h=1080)
